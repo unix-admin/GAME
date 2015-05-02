@@ -66,6 +66,8 @@ eCKeyKode wait_console_key_press()
             return KEY_ESCAPE;
         case 32:
             return KEY_FIRE;
+        case 60:
+            return KEY_ACTIVATE;
 
         default:
             return UNKNOWN;

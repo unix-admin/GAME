@@ -1,5 +1,6 @@
-#ifndef CONTROL
-#define CONTROL
+//pragma once
 
-#endif // CONTROL
+// #include "unitdata.h"
+
+void blabla();
 

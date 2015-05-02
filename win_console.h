@@ -37,6 +37,9 @@ enum eCKeyKode
    ,KEY_RIGHT
    ,KEY_DOWN
    ,KEY_FIRE
+   ,KEY_ACTIVATE
+
+
 };
 
 

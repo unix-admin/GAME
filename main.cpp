@@ -1,4 +1,5 @@
 #include "win_console.h"
+#include "unitDB.h"
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -7,80 +8,58 @@
 #include<iomanip>
 #include<fstream>
 
-//if(kbhit())
 
 using namespace std;
 
-const int MAX_UNIT_NAME = 20;
-const int medRange   = 6;
-const int medHealth  = 100;
-const int medPower   = 50;
-const int medPoints  = 10;
-
-enum eTypeUnit
+void moveUnit(sUnit &unit, eDirection direction)
 {
-    MEDIC = 0
-   ,COMMANDER
-   ,SOLDIER
-   ,SCOUT
-   ,SNIPER
-};
-
-enum eDirection
-{
-    UP = 0
-   ,DOWN
-   ,RIGHT
-   ,LEFT
-   ,FIRE
-};
-
-#pragma pack(push, 1)
-struct sUnit
-{
-    int   x;
-    int   y;
-    int   range;
-    int   health;
-    int   power;
-    int   points;
-    eDirection keyPrevious;
-    eDirection keyCurrent;
-    char  *pName;
-
-    eTypeUnit type;
-};
-
-#pragma pack(pop)
-
-
-sUnit *readUnitData(int &outSize)
-{
-    sUnit *res = nullptr;
-    // open
-    int tmpsize = 0;
-    ifstream inFile;
-    bool isRead =false;
-    inFile.open("c:/game/files/units.txt");
-    string line;
-    int index = 0;
-    while(getline(inFile,line))
+    unit.keyCurrent = direction;
+    switch(direction)
     {
-        if(!isRead)
+        case UP:
         {
+            if((unit.y - 1) >= 0)
+            {
 
-            tmpsize atoi(line.c_str());
+                delete_char(unit.x, unit.y);
+                unit.y -= 1;
+            }
 
+            break;
         }
-       // line.find()
+        case DOWN:
+        {
+            if((unit.y + 1) < 50)
+            {
+                delete_char(unit.x, unit.y);
+                unit.y += 1;
+            }
+            break;
+        }
+        case LEFT:
+        {
+            if((unit.x - 1) >= 0)
+            {
+                delete_char(unit.x, unit.y);
+                unit.x -= 1;
+            }
+            break;
+        }
+        case RIGHT:
+        {
+            if((unit.x + 1) < 119)
+            {
+                delete_char(unit.x, unit.y);
+                unit.x += 1;
+            }
+            break;
+        }
+
+        default:
+
+            break;
     }
-    //read
-
-    //close
-    inFile.close();
-    return res;
 }
-
 void fire(eDirection key, int x, int y)
 {
             int iter = 1;
@@ -137,7 +116,7 @@ void fire(eDirection key, int x, int y)
         }
        case RIGHT:
        {
-        for(int i = x;i<119;++i)
+        for(int i = x;i<118;++i)
         {
             if (iter!= 1)
             {
@@ -156,85 +135,15 @@ void fire(eDirection key, int x, int y)
     }
     delete_char(x,y);
 }
-
 void getUnitControls(sUnit &unit, eDirection direction )
 {
     unit.keyPrevious = unit.keyCurrent;
     unit.keyCurrent = direction;
 
 }
-
-sUnit *getMedicUnit()
-{
-    sUnit *tmp = new sUnit;
-
-    tmp->health = medHealth;
-    tmp->points = medPoints;
-    tmp->range  = medRange;
-    tmp->power  = medPower;
-    tmp->type   = MEDIC;
-
-    tmp->x = 0;
-    tmp->y = 0;
-    tmp->pName = new char[MAX_UNIT_NAME + 1];
-
-    return tmp;
-}
-
-void moveUnit(sUnit &unit, eDirection direction)
-{
-    unit.keyCurrent = direction;
-    switch(direction)
-    {
-        case UP:
-        {
-            if((unit.y - 1) >= 0)
-            {
-
-                delete_char(unit.x, unit.y);
-                unit.y -= 1;
-            }
-            else
-                Beep(1000, 50);
-            break;
-        }
-        case DOWN:
-        {
-            if((unit.y + 1) < 50)
-            {
-                delete_char(unit.x, unit.y);
-                unit.y += 1;
-            }
-            break;
-        }
-        case LEFT:
-        {
-            if((unit.x - 1) >= 0)
-            {
-                delete_char(unit.x, unit.y);
-                unit.x -= 1;
-            }
-            break;
-        }
-        case RIGHT:
-        {
-            if((unit.x + 1) < 120)
-            {
-                delete_char(unit.x, unit.y);
-                unit.x += 1;
-            }
-            break;
-        }
-
-        default:
-
-            break;
-    }
-}
-
 void drawUnit(sUnit &unit)
 {
-    switch(unit.type)
+    switch(unit.meType)
     {
         case MEDIC:
         {
@@ -242,26 +151,49 @@ void drawUnit(sUnit &unit)
             print_char(ch, unit.x, unit.y, Light_Green);
             break;
         }
-        case COMMANDER:
-        case SOLDIER:
-        case SCOUT:
-        case SNIPER:
+        case GRENADER:
+        {
+            char ch = 2;
+            print_char(ch, unit.x, unit.y, Light_Green);
             break;
+        }
+        case SOLDIER:        
+        {
+            char ch = 3;
+            print_char(ch, unit.x, unit.y, Light_Green);
+            break;
+        }
+        break;
     }
+}
+sUnit  *activateUnit(sUnit *psUnitsArray, sUnit *pUnit, int *size)
+{
+    int previousUnit;
+    previousUnit = pUnit->number;
+    if (previousUnit < *size-1)
+        pUnit = &psUnitsArray[previousUnit+1];
+    else pUnit = &psUnitsArray[0]; ;
+    return pUnit;
 }
 
 int main()
 {
     console_init();
-
     sUnit *pUnit = 0;
-    pUnit = getMedicUnit();
-    eCKeyKode key;
-    void readUnitData();
+    int size;
+    sUnit *psUnitsArray = NULL;
+    psUnitsArray = readUnitsData(size);
+    for (int i(0);i<size;++i)
+    {
+        pUnit = &psUnitsArray[i];
+        pUnit->number = i;
+        drawUnit(*pUnit);
+    }
+    pUnit = &psUnitsArray[0];
+    eCKeyKode key;    
     bool isRun = true;
     for(;isRun;)
     {
-        // system("cls");
         drawUnit(*pUnit);
         key = wait_console_key_press();
         switch(key)
@@ -274,7 +206,8 @@ int main()
             case KEY_ESCAPE:
             {
                 //print_char('E', 0, 0);
-                isRun = false;
+             //   isRun = false;
+             pUnit = activateUnit(psUnitsArray,pUnit, &size);
                 break;
             }
             case KEY_UP:
@@ -303,9 +236,16 @@ int main()
             }
             case KEY_FIRE:
             {
-               fire(pUnit->keyCurrent, pUnit->x, pUnit->y);
+              fire(pUnit->keyCurrent, pUnit->x, pUnit->y);
                 //print_char('D', 0, 0);
                 break;
+            }
+            case KEY_ACTIVATE:
+            {
+              //  activateUnit(psUnitsArray,pUnit,);
+                //fire(pUnit->keyCurrent, pUnit->x, pUnit->y);
+                //print_char('D', 0, 0);
+            break;
             }
             case UNKNOWN:
             default:
